@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Notifications\DeletedProdNotification;
+use App\Notifications\NewUserNotification;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -13,54 +16,65 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $products = Product::with(['User', 'Product_images'])->get();
+        return response()->json($products, 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|unique:products,slug',
+            'price' => 'required|numeric',
+            'stock' => 'required|integer',
+            'status' => 'required|boolean',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $product = Product::create($validated);
+
+        return response()->json($product, 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProductRequest $request)
+    public function show($id)
     {
-        //
+        $product = Product::with(['User', 'Product_images'])->find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        return response()->json($product, 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product)
+    public function update(Request $request, $id)
     {
-        //
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'slug' => 'sometimes|string|unique:products,slug,' . $id,
+            'price' => 'sometimes|numeric',
+            'stock' => 'sometimes|integer',
+            'status' => 'sometimes|boolean',
+            'category_id' => 'sometimes|exists:categories,id',
+        ]);
+
+        $product->update($validated);
+
+        return response()->json($product, 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
+    public function destroy($id)
     {
-        //
-    }
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateProductRequest $request, Product $product)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Product $product)
-    {
-        //
+        $product->notify(new DeletedProdNotification());
+        $product->delete();
+        return response()->json(['message' => 'Product deleted'], 204);
     }
 }

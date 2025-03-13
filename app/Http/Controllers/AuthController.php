@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Notifications\NewUserNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -42,13 +43,12 @@ class AuthController extends Controller
                 'email' => ['Les identifiants sont incorrects.'],
             ]);
         }
+        $user->notify(new NewUserNotification());
 
         return response()->json([
             'token' => $user->createToken('api-token')->plainTextToken
         ]);
     }
-
-    // Déconnexion
     public function logout(Request $request)
     {
         $user = Auth::user();
