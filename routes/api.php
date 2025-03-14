@@ -4,11 +4,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategorieController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middleware\RoleMiddleware;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Http\Controllers\ProductController;
 use App\Models\Categorie;
+use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductManagerController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -55,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::prefix('products')->group(function () {
+Route::prefix('products')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name("products.index");
     Route::post('/', [ProductController::class, 'store'])->name("products.store");
     Route::get('/{id}', [ProductController::class, 'show'])->name("products.show");
@@ -69,3 +72,15 @@ Route::prefix('categorie')->group(function () {
     Route::put('/{id}', [CategorieController::class, 'update'])->name("categorie.update");
     Route::delete('/{id}', [CategorieController::class, 'destroy'])->name("categorie.destroy");
 });
+
+Route::get('products/{productId}/images', [ProductImageController::class, 'index']);
+Route::post('products/{productId}/images', [ProductImageController::class, 'store']);
+Route::get('product-images/{id}', [ProductImageController::class, 'show']);
+Route::delete('product-images/{id}', [ProductImageController::class, 'destroy']);
+
+Route::post('/createuser', [ProductManagerController::class, 'createUser']);
+Route::get('/users', [UserController::class, 'listUsers']);
+Route::get('/user/{id}', [UserController::class, 'getUser']);
+Route::put('/user/{id}', [UserController::class, 'updateUser']);
+Route::delete('/user/{id}', [UserController::class, 'deleteUser']);
+Route::post('/user/restore/{id}', [UserController::class, 'restoreUser']);

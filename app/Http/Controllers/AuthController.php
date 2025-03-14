@@ -25,6 +25,11 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+        if ($user->id == 1) {
+            $user->assignRole("super_admin");
+        } else {
+            $user->assignRole("product_manager");
+        }
 
         return response()->json(['message' => 'Utilisateur créé avec succès']);
     }

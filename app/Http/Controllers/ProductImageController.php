@@ -2,65 +2,74 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductImage;
+use App\Models\Product;
 use App\Models\product_image;
-use App\Http\Requests\Storeproduct_imageRequest;
-use App\Http\Requests\Updateproduct_imageRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImageController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of images for a specific product.
      */
-    public function index()
+    public function index($productId)
     {
-        //
+        $images = product_image::where('product_id', $productId)->get();
+        return response()->json($images, 200);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Store a newly uploaded product image.
      */
-    public function create()
+    public function store(Request $request, $productId)
     {
-        //
+        $validated = $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_primary' => 'required|boolean',
+        ]);
+
+        $product = Product::find($productId);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $path = $request->file('image')->store('product_images', 'public');
+
+        $image = product_image::create([
+            'product_id' => $productId,
+            'image_url' => $path,
+            'is_primary' => $validated['is_primary'],
+        ]);
+
+        return response()->json($image, 201);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show a specific product image.
      */
-    public function store(Storeproduct_imageRequest $request)
+    public function show($id)
     {
-        //
+        $image = product_image::find($id);
+        if (!$image) {
+            return response()->json(['message' => 'Image not found'], 404);
+        }
+        return response()->json($image, 200);
     }
 
     /**
-     * Display the specified resource.
+     * Delete a product image.
      */
-    public function show(product_image $product_image)
+    public function destroy($id)
     {
-        //
-    }
+        $image = product_image::find($id);
+        if (!$image) {
+            return response()->json(['message' => 'Image not found'], 404);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(product_image $product_image)
-    {
-        //
-    }
+        Storage::disk('public')->delete($image->image_url);
+        $image->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Updateproduct_imageRequest $request, product_image $product_image)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(product_image $product_image)
-    {
-        //
+        return response()->json(['message' => 'Image deleted'], 201);
     }
 }

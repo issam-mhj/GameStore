@@ -16,6 +16,9 @@ class ProductController extends Controller
      */
     public function index()
     {
+        if (!auth()->user()->hasRole("product_manager")) {
+            return response()->json("you are not allowed to view this", 403);
+        }
         $products = Product::with(['User', 'Product_images'])->get();
         return response()->json($products, 200);
     }
