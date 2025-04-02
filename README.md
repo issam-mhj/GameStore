@@ -269,7 +269,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 ## Contact
 
-Your Name - [Issam Mhajri](https://www.linkedin.com/in/linkedin_username) - issammahtaj02@example.com
+Your Name - [Issam Mahtaj](https://www.linkedin.com/in/linkedin_username) - issammahtaj02@example.com
 
 Project Link: [https://github.com/issam-mhj/gamestore](https://github.com/issam-mhj/gamestore)
 
